@@ -1,0 +1,10 @@
+﻿<Extensions Backend="CPlusPlus" Condition="Android">
+	<ProcessFile Name="IabBroadcastReceiver.java" TargetName="@(Java.SourceDirectory)/com/fuse/billing/android/IabBroadcastReceiver.java" />
+	<ProcessFile Name="IabException.java" TargetName="@(Java.SourceDirectory)/com/fuse/billing/android/IabException.java" />
+	<ProcessFile Name="IabHelper.java" TargetName="@(Java.SourceDirectory)/com/fuse/billing/android/IabHelper.java" />
+	<ProcessFile Name="IabResult.java" TargetName="@(Java.SourceDirectory)/com/fuse/billing/android/IabResult.java" />
+	<ProcessFile Name="Purchase.java" TargetName="@(Java.SourceDirectory)/com/fuse/billing/android/Purchase.java" />
+	<ProcessFile Name="Security.java" TargetName="@(Java.SourceDirectory)/com/fuse/billing/android/Security.java" />
+	<ProcessFile Name="SkuDetails.java" TargetName="@(Java.SourceDirectory)/com/fuse/billing/android/SkuDetails.java" />
+	<ProcessFile Name="IInAppBillingService.aidl" TargetName="@(Java.SourceDirectory)/com/android/vending/billing/IInAppBillingService.aidl" />
+</Extensions>
