@@ -1,0 +1,16 @@
+root = true
+
+[*.{uno,ux,unoproj,unosln}]
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{uno,ux}]
+indent_style = tab
+
+[*.unoproj]
+indent_style = space
+indent_size = 4
+
+[*.unosln]
+indent_style = space
+indent_size = 2
