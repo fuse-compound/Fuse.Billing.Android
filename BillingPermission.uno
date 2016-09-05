@@ -11,7 +11,6 @@ namespace Fuse.Billing.Android
 		{
 			get
 			{
-				debug_log "not stripped!";
 				return _vending_billing();
 			}
 		}
