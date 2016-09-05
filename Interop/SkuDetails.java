@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.example.android.trivialdrivesample.util;
+package com.fuse.billing.android;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,7 +22,6 @@ import org.json.JSONObject;
  * Represents an in-app product's listing details.
  */
 public class SkuDetails {
-    private final String mItemType;
     private final String mSku;
     private final String mType;
     private final String mPrice;
@@ -30,16 +29,14 @@ public class SkuDetails {
     private final String mPriceCurrencyCode;
     private final String mTitle;
     private final String mDescription;
-    private final String mJson;
+    private final JSONObject mJson;
 
     public SkuDetails(String jsonSkuDetails) throws JSONException {
-        this(IabHelper.ITEM_TYPE_INAPP, jsonSkuDetails);
+        this(new JSONObject(jsonSkuDetails));
     }
 
-    public SkuDetails(String itemType, String jsonSkuDetails) throws JSONException {
-        mItemType = itemType;
-        mJson = jsonSkuDetails;
-        JSONObject o = new JSONObject(mJson);
+    public SkuDetails(JSONObject o) {
+        mJson = o;
         mSku = o.optString("productId");
         mType = o.optString("type");
         mPrice = o.optString("price");
@@ -49,6 +46,18 @@ public class SkuDetails {
         mDescription = o.optString("description");
     }
 
+    public static SkuDetails createForTestProduct(String sku) throws JSONException {
+        JSONObject o = new JSONObject();
+        o.put("productId", sku);
+        o.put("type", IabHelper.ITEM_TYPE_INAPP);
+        o.put("price", "$0.99");
+        o.put("price_amount_micros", 99);
+        o.put("price_currency_code", "USD");
+        o.put("title", "Sample Title");
+        o.put("description", "A static test product");
+        return new SkuDetails(o);
+    }
+
     public String getSku() { return mSku; }
     public String getType() { return mType; }
     public String getPrice() { return mPrice; }
@@ -56,6 +65,7 @@ public class SkuDetails {
     public String getPriceCurrencyCode() { return mPriceCurrencyCode; }
     public String getTitle() { return mTitle; }
     public String getDescription() { return mDescription; }
+    public JSONObject toJSON() { return mJson; }
 
     @Override
     public String toString() {

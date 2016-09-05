@@ -1,0 +1,11 @@
+<Button ux:Class="CustomButton" Margin="2">
+	<Panel ux:Template="GraphicsAppearance" HitTestMode="LocalBounds">
+		<Text ux:Name="Button_Text" Value="{Property this.Text}" Color="#fff" Alignment="Center" TextAlignment="Center" Margin="10" />
+		<Rectangle CornerRadius="4" Layer="Background">
+			<LinearGradient>
+				<GradientStop Offset="0" Color="#f60" />
+				<GradientStop Offset="1" Color="#f00" />
+			</LinearGradient>
+		</Rectangle>
+	</Panel>
+</Button>

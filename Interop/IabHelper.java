@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.example.android.trivialdrivesample.util;
+package com.fuse.billing.android;
 
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -32,6 +32,8 @@ import android.util.Log;
 
 import com.android.vending.billing.IInAppBillingService;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.json.JSONException;
 
 import java.util.ArrayList;
@@ -142,6 +144,7 @@ public class IabHelper {
     public static final int IABHELPER_SUBSCRIPTIONS_NOT_AVAILABLE = -1009;
     public static final int IABHELPER_INVALID_CONSUMPTION = -1010;
     public static final int IABHELPER_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = -1011;
+    public static final int IABHELPER_DESERIALIZATION_ERROR = -1012;
 
     // Keys for the responses from InAppBillingService
     public static final String RESPONSE_CODE = "RESPONSE_CODE";
@@ -556,7 +559,7 @@ public class IabHelper {
                 String sku = purchase.getSku();
 
                 // Verify signature
-                if (!Security.verifyPurchase(mSignatureBase64, purchaseData, dataSignature)) {
+                if (!verifyPurchase(sku, purchaseData, dataSignature)) {
                     logError("Purchase signature verification FAILED for sku " + sku);
                     result = new IabResult(IABHELPER_VERIFICATION_FAILED, "Signature verification failed for sku " + sku);
                     if (mPurchaseListener != null) mPurchaseListener.onIabPurchaseFinished(result, purchase);
@@ -598,57 +601,47 @@ public class IabHelper {
         return true;
     }
 
-    public Inventory queryInventory() throws IabException {
-        return queryInventory(false, null, null);
+    public String querySkuDetailsAsJsonString(String itemType, String skuArrayJsonString) throws IabException {
+        try {
+            JSONArray skuJsonArray = new JSONArray(skuArrayJsonString);
+            List<String> skuList = new ArrayList<String>();
+            for (int i = 0; i < skuJsonArray.length(); i++) {
+                skuList.add(skuJsonArray.getString(i));
+            }
+            List<SkuDetails> skuDetailsList = new ArrayList<SkuDetails>();
+            int r = querySkuDetails(itemType, skuList, skuDetailsList);
+            if (r != BILLING_RESPONSE_RESULT_OK) {
+                throw new IabException(r, "Error querying sku details");
+            }
+            JSONArray skuDetailsJsonArray = new JSONArray();
+            for (SkuDetails skuDetails : skuDetailsList) {
+                skuDetailsJsonArray.put(skuDetails.toJSON());
+            }
+            return skuDetailsJsonArray.toString();
+        }
+        catch (RemoteException e) {
+            throw new IabException(IABHELPER_REMOTE_EXCEPTION, "Remote exception while refreshing inventory.", e);
+        }
+        catch (JSONException e) {
+            throw new IabException(IABHELPER_BAD_RESPONSE, "Error parsing JSON response while querying sku details.", e);
+        }
     }
 
-    /**
-     * Queries the inventory. This will query all owned items from the server, as well as
-     * information on additional skus, if specified. This method may block or take long to execute.
-     * Do not call from a UI thread. For that, use the non-blocking version {@link #queryInventoryAsync}.
-     *
-     * @param querySkuDetails if true, SKU details (price, description, etc) will be queried as well
-     *     as purchase information.
-     * @param moreItemSkus additional PRODUCT skus to query information on, regardless of ownership.
-     *     Ignored if null or if querySkuDetails is false.
-     * @param moreSubsSkus additional SUBSCRIPTIONS skus to query information on, regardless of ownership.
-     *     Ignored if null or if querySkuDetails is false.
-     * @throws IabException if a problem occurs while refreshing the inventory.
-     */
-    public Inventory queryInventory(boolean querySkuDetails, List<String> moreItemSkus,
-            List<String> moreSubsSkus) throws IabException {
-        checkNotDisposed();
-        checkSetupDone("queryInventory");
+    public String queryPurchasesAsJsonString(String itemType) throws IabException
+    {
         try {
-            Inventory inv = new Inventory();
-            int r = queryPurchases(inv, ITEM_TYPE_INAPP);
+            List<Purchase> purchases = new ArrayList<Purchase>();
+            int r = queryPurchases(purchases, itemType);
             if (r != BILLING_RESPONSE_RESULT_OK) {
                 throw new IabException(r, "Error refreshing inventory (querying owned items).");
             }
-
-            if (querySkuDetails) {
-                r = querySkuDetails(ITEM_TYPE_INAPP, inv, moreItemSkus);
-                if (r != BILLING_RESPONSE_RESULT_OK) {
-                    throw new IabException(r, "Error refreshing inventory (querying prices of items).");
-                }
+            // Yup, there will be some redundant (de)serialization going on here.
+            // We don't care as it's very little data.
+            JSONArray jsonArray = new JSONArray();
+            for (Purchase purchase : purchases) {
+                jsonArray.put(purchase.toJSON());
             }
-
-            // if subscriptions are supported, then also query for subscriptions
-            if (mSubscriptionsSupported) {
-                r = queryPurchases(inv, ITEM_TYPE_SUBS);
-                if (r != BILLING_RESPONSE_RESULT_OK) {
-                    throw new IabException(r, "Error refreshing inventory (querying owned subscriptions).");
-                }
-
-                if (querySkuDetails) {
-                    r = querySkuDetails(ITEM_TYPE_SUBS, inv, moreSubsSkus);
-                    if (r != BILLING_RESPONSE_RESULT_OK) {
-                        throw new IabException(r, "Error refreshing inventory (querying prices of subscriptions).");
-                    }
-                }
-            }
-
-            return inv;
+            return jsonArray.toString();
         }
         catch (RemoteException e) {
             throw new IabException(IABHELPER_REMOTE_EXCEPTION, "Remote exception while refreshing inventory.", e);
@@ -658,67 +651,14 @@ public class IabHelper {
         }
     }
 
-    /**
-     * Listener that notifies when an inventory query operation completes.
-     */
-    public interface QueryInventoryFinishedListener {
-        /**
-         * Called to notify that an inventory query operation completed.
-         *
-         * @param result The result of the operation.
-         * @param inv The inventory.
-         */
-        void onQueryInventoryFinished(IabResult result, Inventory inv);
-    }
 
-
-    /**
-     * Asynchronous wrapper for inventory query. This will perform an inventory
-     * query as described in {@link #queryInventory}, but will do so asynchronously
-     * and call back the specified listener upon completion. This method is safe to
-     * call from a UI thread.
-     *
-     * @param querySkuDetails as in {@link #queryInventory}
-     * @param moreItemSkus as in {@link #queryInventory}
-     * @param moreSubsSkus as in {@link #queryInventory}
-     * @param listener The listener to notify when the refresh operation completes.
-     */
-    public void queryInventoryAsync(final boolean querySkuDetails, final List<String> moreItemSkus,
-            final List<String> moreSubsSkus, final QueryInventoryFinishedListener listener)
-        throws IabAsyncInProgressException {
-        final Handler handler = new Handler();
-        checkNotDisposed();
-        checkSetupDone("queryInventory");
-        flagStartAsync("refresh inventory");
-        (new Thread(new Runnable() {
-            public void run() {
-                IabResult result = new IabResult(BILLING_RESPONSE_RESULT_OK, "Inventory refresh successful.");
-                Inventory inv = null;
-                try {
-                    inv = queryInventory(querySkuDetails, moreItemSkus, moreSubsSkus);
-                }
-                catch (IabException ex) {
-                    result = ex.getResult();
-                }
-
-                flagEndAsync();
-
-                final IabResult result_f = result;
-                final Inventory inv_f = inv;
-                if (!mDisposed && listener != null) {
-                    handler.post(new Runnable() {
-                        public void run() {
-                            listener.onQueryInventoryFinished(result_f, inv_f);
-                        }
-                    });
-                }
-            }
-        })).start();
-    }
-
-    public void queryInventoryAsync(QueryInventoryFinishedListener listener)
-        throws IabAsyncInProgressException{
-        queryInventoryAsync(false, null, null, listener);
+    public void consume(String jsonItemInfo) throws IabException {
+        try {
+            consume(new Purchase(jsonItemInfo));
+        }
+        catch (JSONException e) {
+            throw new IabException(IABHELPER_DESERIALIZATION_ERROR, "Error deserializing purchase item.", e);
+        }
     }
 
     /**
@@ -730,7 +670,7 @@ public class IabHelper {
      * @param itemInfo The PurchaseInfo that represents the item to consume.
      * @throws IabException if there is a problem during consumption.
      */
-    void consume(Purchase itemInfo) throws IabException {
+    public void consume(Purchase itemInfo) throws IabException {
         checkNotDisposed();
         checkSetupDone("consume");
 
@@ -742,6 +682,11 @@ public class IabHelper {
         try {
             String token = itemInfo.getToken();
             String sku = itemInfo.getSku();
+
+            if (sku.equals("android.test.purchased")) {
+                token = "inapp:" + com.fuse.Activity.getRootActivity().getPackageName() + ":android.test.purchased";
+            }
+
             if (token == null || token.equals("")) {
                 logError("Can't consume "+ sku + ". No token.");
                 throw new IabException(IABHELPER_MISSING_TOKEN, "PurchaseInfo is missing token for sku: "
@@ -854,6 +799,22 @@ public class IabHelper {
     }
 
 
+    boolean isTestSku(String sku) {
+        return sku.equals("android.test.purchased") ||
+            sku.equals("android.test.cancelled") ||
+            sku.equals("android.test.refunded") ||
+            sku.equals("android.test.item_unavailable");
+    }
+
+
+    boolean verifyPurchase(String sku, String purchaseData, String dataSignature) {
+        logDebug("verifyPurchase of sku " + sku);
+        if (isTestSku(sku))
+            return true;
+        return Security.verifyPurchase(mSignatureBase64, purchaseData, dataSignature);
+    }
+
+
     // Checks that setup was done; if not, throws an exception.
     void checkSetupDone(String operation) {
         if (!mSetupDone) {
@@ -933,7 +894,7 @@ public class IabHelper {
         }
     }
 
-    int queryPurchases(Inventory inv, String itemType) throws JSONException, RemoteException {
+    int queryPurchases(List<Purchase> purchases, String itemType) throws JSONException, RemoteException {
         // Query purchases
         logDebug("Querying owned items, item type: " + itemType);
         logDebug("Package name: " + mContext.getPackageName());
@@ -969,7 +930,8 @@ public class IabHelper {
                 String purchaseData = purchaseDataList.get(i);
                 String signature = signatureList.get(i);
                 String sku = ownedSkus.get(i);
-                if (Security.verifyPurchase(mSignatureBase64, purchaseData, signature)) {
+                /* Skip verification for static test responses */
+                if (verifyPurchase(sku, purchaseData, signature)) {
                     logDebug("Sku is owned: " + sku);
                     Purchase purchase = new Purchase(itemType, purchaseData, signature);
 
@@ -979,7 +941,7 @@ public class IabHelper {
                     }
 
                     // Record ownership and token
-                    inv.addPurchase(purchase);
+                    purchases.add(purchase);
                 }
                 else {
                     logWarn("Purchase signature verification **FAILED**. Not adding item.");
@@ -996,18 +958,10 @@ public class IabHelper {
         return verificationFailed ? IABHELPER_VERIFICATION_FAILED : BILLING_RESPONSE_RESULT_OK;
     }
 
-    int querySkuDetails(String itemType, Inventory inv, List<String> moreSkus)
+
+    int querySkuDetails(String itemType, List<String> skuList, List<SkuDetails> targetList)
             throws RemoteException, JSONException {
         logDebug("Querying SKU details.");
-        ArrayList<String> skuList = new ArrayList<String>();
-        skuList.addAll(inv.getAllOwnedSkus(itemType));
-        if (moreSkus != null) {
-            for (String sku : moreSkus) {
-                if (!skuList.contains(sku)) {
-                    skuList.add(sku);
-                }
-            }
-        }
 
         if (skuList.size() == 0) {
             logDebug("queryPrices: nothing to do because there are no SKUs.");
@@ -1016,22 +970,17 @@ public class IabHelper {
 
         // Split the sku list in blocks of no more than 20 elements.
         ArrayList<ArrayList<String>> packs = new ArrayList<ArrayList<String>>();
-        ArrayList<String> tempList;
-        int n = skuList.size() / 20;
-        int mod = skuList.size() % 20;
-        for (int i = 0; i < n; i++) {
-            tempList = new ArrayList<String>();
-            for (String s : skuList.subList(i * 20, i * 20 + 20)) {
-                tempList.add(s);
+        ArrayList<String> currentPack = null;
+        for (String sku : skuList) {
+            if (isTestSku(sku)) {
+                targetList.add(SkuDetails.createForTestProduct(sku));
+            } else {
+                if (currentPack == null || currentPack.size() >= 20) {
+                    currentPack = new ArrayList<String>();
+                    packs.add(currentPack);
+                }
+                currentPack.add(sku);
             }
-            packs.add(tempList);
-        }
-        if (mod != 0) {
-            tempList = new ArrayList<String>();
-            for (String s : skuList.subList(n * 20, n * 20 + mod)) {
-                tempList.add(s);
-            }
-            packs.add(tempList);
         }
 
         for (ArrayList<String> skuPartList : packs) {
@@ -1055,9 +1004,9 @@ public class IabHelper {
                     RESPONSE_GET_SKU_DETAILS_LIST);
 
             for (String thisResponse : responseList) {
-                SkuDetails d = new SkuDetails(itemType, thisResponse);
+                SkuDetails d = new SkuDetails(thisResponse);
                 logDebug("Got sku details: " + d);
-                inv.addSkuDetails(d);
+                targetList.add(d);
             }
         }
 

@@ -1,0 +1,8 @@
+<Extensions Backend="CPlusPlus" Condition="Android">
+	<Using Namespace="Fuse.Billing.Android" />
+	<Type Name="BillingPermission">
+		<Method Signature="_vending_billing():Uno.Permissions.PlatformPermission">
+			<Require AndroidManifest.Permission="com.android.vending.BILLING" />
+		</Method>
+	</Type>
+</Extensions>

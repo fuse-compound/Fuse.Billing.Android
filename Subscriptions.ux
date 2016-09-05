@@ -1,0 +1,12 @@
+<Page ux:Class="Subscriptions">
+	<JavaScript File="subscriptions.js" />
+	<StackPanel>
+		<TextInput PlaceholderText="SKU" Value="{sku}" />
+		<CustomButton Height="50" Text="Refresh" Clicked="{refresh}" />
+		<CustomButton Height="50" Text="Subscribe" Clicked="{subscribe}" />
+		<Text Value="Subscription purchases:" />
+		<Text Value="{subscriptionPurchases}" TextWrapping="Wrap" />
+		<Text Value="Log:" />
+		<Text Value="{log}" TextWrapping="Wrap" />
+	</StackPanel>
+</Page>

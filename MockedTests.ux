@@ -1,0 +1,12 @@
+<Page ux:Class="MockedTests">
+	<JavaScript File="mockedTests.js" />
+	<ScrollView>
+		<StackPanel>
+			<CustomButton Text="Start test" Clicked="{run}" />
+			<WhileTrue Value="{isBusy}">
+				<Text Value="IN PROGRESS" Color="Red" />
+			</WhileTrue>
+			<Text Value="{log}" Alignment="CenterLeft" TextWrapping="Wrap" />
+		</StackPanel>
+	</ScrollView>
+</Page>

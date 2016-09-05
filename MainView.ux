@@ -1,0 +1,14 @@
+<App>
+	<JavaScript File="main.js" />
+	<WhileFalse Value="{setupCompleted}">
+		<Panel Background="#ffaaaa">
+			<Text Value="{setupMessage}" Alignment="Center" />
+		</Panel>
+	</WhileFalse>
+	<ClientPanel>
+		<PageControl>
+			<Subscriptions />
+			<MockedTests />
+		</PageControl>
+	</ClientPanel>
+</App>

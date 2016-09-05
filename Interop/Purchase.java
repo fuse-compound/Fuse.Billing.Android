@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.example.android.trivialdrivesample.util;
+package com.fuse.billing.android;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,7 +35,12 @@ public class Purchase {
     boolean mIsAutoRenewing;
 
     public Purchase(String itemType, String jsonPurchaseInfo, String signature) throws JSONException {
+        this(jsonPurchaseInfo);
         mItemType = itemType;
+        mSignature = signature;
+    }
+
+    public Purchase(String jsonPurchaseInfo) throws JSONException {
         mOriginalJson = jsonPurchaseInfo;
         JSONObject o = new JSONObject(mOriginalJson);
         mOrderId = o.optString("orderId");
@@ -46,7 +51,8 @@ public class Purchase {
         mDeveloperPayload = o.optString("developerPayload");
         mToken = o.optString("token", o.optString("purchaseToken"));
         mIsAutoRenewing = o.optBoolean("autoRenewing");
-        mSignature = signature;
+        mSignature = o.optString("signature");
+        mItemType = o.optString("itemType");
     }
 
     public String getItemType() { return mItemType; }
@@ -60,6 +66,13 @@ public class Purchase {
     public String getOriginalJson() { return mOriginalJson; }
     public String getSignature() { return mSignature; }
     public boolean isAutoRenewing() { return mIsAutoRenewing; }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject jobj = new JSONObject(mOriginalJson);
+        jobj.put("itemType", mItemType);
+        jobj.put("signature", mSignature);
+        return jobj;
+    }
 
     @Override
     public String toString() { return "PurchaseInfo(type:" + mItemType + "):" + mOriginalJson; }

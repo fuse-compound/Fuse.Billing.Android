@@ -1,3 +1,4 @@
 build/
 .uno/
 .DS_Store
+release.keystore

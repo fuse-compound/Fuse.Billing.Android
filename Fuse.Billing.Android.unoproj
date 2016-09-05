@@ -1,0 +1,26 @@
+{
+  "Version": "2.0",
+  "VersionCode": 8,
+  "RootNamespace":"",
+  "Name": "TrivialDriveIAPTesting",
+  "Packages": [
+  	"Fuse",
+  	"FuseJS",
+    "Uno.Permissions"
+  ],
+  "Includes": [
+    "*",
+    "BillingPermission.uxl:Extensions",
+    "Interop/Interop.uxl:Extensions",
+    "Interop/*.java:File"
+  ],
+  "Android": {
+      "Package": "com.fusetools.android.trivialdrivesample",
+      "Key": {
+          "Alias": "appkey",
+          "AliasPassword": "****",
+          "Store": "release.keystore",
+          "StorePassword": "****"
+      }
+  }
+}
