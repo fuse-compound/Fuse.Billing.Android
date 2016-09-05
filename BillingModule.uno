@@ -117,8 +117,6 @@ namespace Fuse.Billing.Android
 		Future<Nothing> Setup(object[] args)
 		{
 			_helper = new BillingHelper((string)args[0] /* Base64 encoded public key */);
-			// TODO: Actually await the permission request
-			Helper.RequestBillingPermission();
 			return Helper.Setup();
 		}
 
