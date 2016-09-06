@@ -1,0 +1,14 @@
+{
+  "Version": "0.1",
+  "Packages": [
+  	"Fuse",
+  	"FuseJS",
+    "Uno.Permissions"
+  ],
+  "Includes": [
+    "*",
+    "BillingPermission.uxl:Extensions",
+    "Interop/Interop.uxl:Extensions",
+    "Interop/*.java:File"
+  ]
+}

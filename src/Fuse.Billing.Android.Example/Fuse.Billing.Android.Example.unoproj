@@ -8,11 +8,11 @@
   	"FuseJS",
     "Uno.Permissions"
   ],
+  "Projects": [
+      "../Fuse.Billing.Android/Fuse.Billing.Android.unoproj"
+  ],
   "Includes": [
-    "*",
-    "BillingPermission.uxl:Extensions",
-    "Interop/Interop.uxl:Extensions",
-    "Interop/*.java:File"
+    "*"
   ],
   "Android": {
       "Package": "com.fusetools.android.trivialdrivesample",
