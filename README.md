@@ -1,6 +1,11 @@
-﻿## Description
+﻿## Library
+
+The library is contained in `src/Fuse.Billing.Android`. For documentation see `BillingModule.uno`.
+
+## Example app
 
 This is an example of using the in app billing functionality on Android using a Fuse app.
+It's located in `src/Fuse.Billing.Android.Example`.
 
 The app got two views:
 

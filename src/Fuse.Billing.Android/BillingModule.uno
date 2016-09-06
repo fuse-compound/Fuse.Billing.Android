@@ -6,6 +6,14 @@ using Uno.Permissions;
 
 namespace Fuse.Billing.Android
 {
+	/**
+		@scriptmodule FuseJS/Billing/Android
+
+		Module for in-app purchases and subscriptions.
+
+		Detailed documentation will be provided at a later stage.
+		For now see the example `Fuse.Billing.Android.Example` for more information.
+	*/
 	[UXGlobalModule]
 	public class BillingModule : NativeModule
 	{
