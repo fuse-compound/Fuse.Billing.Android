@@ -18,7 +18,7 @@ namespace Fuse.Billing.Android
 	public class BillingModule : NativeModule
 	{
 		static readonly BillingModule _instance;
-		extern(Android) private BillingHelper _helper;
+		private IBillingHelper _helper;
 
 		public BillingModule()
 		{
@@ -36,15 +36,22 @@ namespace Fuse.Billing.Android
 		}
 
 
-		extern(Android) private BillingHelper Helper
+		private IBillingHelper Helper
 		{
 			get
 			{
-				if (_helper == null)
+				if defined(Android)
 				{
-					throw new InvalidOperationException("In app billing not setup, calling setup() first is required.");
+					if (_helper == null)
+					{
+						throw new InvalidOperationException("In app billing not setup, calling setup() first is required.");
+					}
+					return _helper;
 				}
-				return _helper;
+				else
+				{
+					throw new NotSupportedException("Google play billing API only supported on Android");
+				}
 			}
 		}
 
@@ -167,7 +174,10 @@ namespace Fuse.Billing.Android
 		*/
 		Future<Nothing> Setup(object[] args)
 		{
-			_helper = new BillingHelper((string)args[0] /* Base64 encoded public key */);
+			if defined(Android)
+			{
+				_helper = new BillingHelper((string)args[0] /* Base64 encoded public key */);
+			}
 			return Helper.Setup();
 		}
 

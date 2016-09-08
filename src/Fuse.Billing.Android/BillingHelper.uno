@@ -16,7 +16,7 @@ namespace Fuse.Billing.Android
 	[ForeignInclude(Language.Java, "android.app.Activity")]
 	[ForeignInclude(Language.Java, "android.content.Intent")]
 	[ForeignInclude(Language.Java, "org.json.JSONObject")]
-	extern(Android) internal class BillingHelper
+	extern(Android) internal class BillingHelper : IBillingHelper
 	{
 		private const string ItemTypeInApp = "inapp";
 		private const string ItemTypeSubs = "subs";
