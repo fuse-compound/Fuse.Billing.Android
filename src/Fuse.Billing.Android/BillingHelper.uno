@@ -95,6 +95,8 @@ namespace Fuse.Billing.Android
 
 		public Future<Nothing> Setup()
 		{
+			if (_setupPromise != null)
+				return _setupPromise;
 			_setupPromise = new NothingPromise();
 			Permissions.Request(BillingPermission.BILLING).Then(OnPermissionGranted, OnPermissionFailed);
 			return _setupPromise;

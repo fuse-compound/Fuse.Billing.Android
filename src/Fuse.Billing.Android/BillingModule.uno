@@ -19,6 +19,7 @@ namespace Fuse.Billing.Android
 	{
 		static readonly BillingModule _instance;
 		private IBillingHelper _helper;
+		private string _pubkey;
 
 		public BillingModule()
 		{
@@ -176,7 +177,17 @@ namespace Fuse.Billing.Android
 		{
 			if defined(Android)
 			{
-				_helper = new BillingHelper((string)args[0] /* Base64 encoded public key */);
+				var pubkey = (string)args[0];
+				if (_helper == null)
+				{
+					_helper = new BillingHelper((string)args[0] /* Base64 encoded public key */);
+					_pubkey = pubkey;
+				}
+				else
+				{
+					if (pubkey != _pubkey)
+						throw new InvalidOperationException("The InAppBilling module can only be instantiated with a single pubkey during application lifetime. This is also currently the case through preview application reloads.");
+				}
 			}
 			return Helper.Setup();
 		}
