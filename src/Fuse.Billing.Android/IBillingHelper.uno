@@ -12,7 +12,7 @@ namespace Fuse.Billing.Android
 		Future<string> QuerySubscriptionPurchases();
 		Future<string> QuerySubscriptionDetails(string skuArrayJsonString);
 		Future<string> Consume(string jsonItemInfo);
-		Future<string> Subscribe(string sku);
+		Future<string> Subscribe(string sku, string optionsJsonString);
 		Future<string> Purchase(string sku);
 		Future<Nothing> Setup();
 	}

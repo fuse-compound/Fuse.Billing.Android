@@ -131,7 +131,14 @@ namespace Fuse.Billing.Android
 		/**
 			@scriptmethod subscribe(sku)
 			@param sku Either a subscription object retrieved using querySubscriptionDetails or a sku string.
+			@param options Object with optional options.
 			@return (Promise) A promise that returns a JSON object describing the subscription purchased.
+
+			The `options` parameter accepts the following properties:
+
+			* `extraData` - Additional app-defined data, can be any string
+			* `oldSkus` - Json array of oldSkus
+			* `requestCode` - Request code, must be a positive integer
 
 			Starts a subscription. If the purchase is cancelled the returned promise will be rejected.
 		*/
@@ -144,7 +151,13 @@ namespace Fuse.Billing.Android
 			string sku = argAsObj != null ? (argAsObj["productId"] as string) : (args[0] as string);
 			if (sku == null)
 				throw new ArgumentException(argErrorMessage);
-			return Helper.Subscribe(sku);
+
+			string options = "{}";
+			if (args.Length > 1)
+			{
+				options = Json.Stringify((Scripting.Object)args[1]);
+			}
+			return Helper.Subscribe(sku, Json.Stringify((Scripting.Object)args[1]));
 		}
 
 

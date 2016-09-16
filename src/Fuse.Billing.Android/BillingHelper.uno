@@ -7,6 +7,7 @@ namespace Fuse.Billing.Android
 {
 	[ForeignInclude(Language.Java, "java.util.Arrays")]
 	[ForeignInclude(Language.Java, "java.util.List")]
+	[ForeignInclude(Language.Java, "java.util.ArrayList")]
 	[ForeignInclude(Language.Java, "java.util.Map")]
 	[ForeignInclude(Language.Java, "org.json.JSONException")]
 	[ForeignInclude(Language.Java, "com.fuse.billing.android.IabHelper")]
@@ -16,6 +17,7 @@ namespace Fuse.Billing.Android
 	[ForeignInclude(Language.Java, "android.app.Activity")]
 	[ForeignInclude(Language.Java, "android.content.Intent")]
 	[ForeignInclude(Language.Java, "org.json.JSONObject")]
+	[ForeignInclude(Language.Java, "org.json.JSONArray")]
 	extern(Android) internal class BillingHelper : IBillingHelper
 	{
 		private const string ItemTypeInApp = "inapp";
@@ -79,17 +81,17 @@ namespace Fuse.Billing.Android
 			return RunTask<string, string>(ConsumeSync, jsonItemInfo);
 		}
 
-		public Future<string> Subscribe(string sku)
+		public Future<string> Subscribe(string sku, string optionsJsonString)
 		{
 			var promise = new CustomPromise<string>();
-			StartPurchaseFlow(sku, ItemTypeSubs, promise.Resolve, promise.Reject);
+			StartPurchaseFlow(sku, ItemTypeSubs, optionsJsonString, promise.Resolve, promise.Reject);
 			return promise;
 		}
 
 		public Future<string> Purchase(string sku)
 		{
 			var promise = new CustomPromise<string>();
-			StartPurchaseFlow(sku, ItemTypeInApp, promise.Resolve, promise.Reject);
+			StartPurchaseFlow(sku, ItemTypeInApp, "{}", promise.Resolve, promise.Reject);
 			return promise;
 		}
 
@@ -126,7 +128,7 @@ namespace Fuse.Billing.Android
 		@}
 
 		[Foreign(Language.Java)]
-		private void StartPurchaseFlow(string sku, string itemType, Action<string> onPurchaseFinishedHandler, Action<string> onPurchaseFailedHandler)
+		private void StartPurchaseFlow(string sku, string itemType, string optionsJsonString, Action<string> onPurchaseFinishedHandler, Action<string> onPurchaseFailedHandler)
 		@{
 			IabHelper helper = (IabHelper)@{BillingHelper:Of(_this)._helper:Get()};
 			Activity activity = com.fuse.Activity.getRootActivity();
@@ -148,17 +150,34 @@ namespace Fuse.Billing.Android
 					}
 				};
 			try {
+				JSONObject options = new JSONObject(optionsJsonString);
+
+				List<String> oldSkus = new ArrayList<String>();
+				JSONArray oldSkusJsonArray = options.optJSONArray("oldSkus");
+				if (oldSkusJsonArray != null) {
+					for (int i = 0; i < oldSkusJsonArray.length(); i++) {
+						oldSkus.add(oldSkusJsonArray.getString(i));
+					}
+				}
+
+				int requestCode = options.optInt("requestCode", 1337);
+				String extraData = options.optString("extraData");
+
 				helper.launchPurchaseFlow(
 					activity,
 					sku,
 					itemType,
-					null, // oldSkus (for subscription replacement)
-					1337, // request code doesn't matter?
+					oldSkus, // oldSkus (for subscription replacement)
+					requestCode, // request code (doesn't matter?)
 					listener,
-					"" // extraData, developer payload. Might add this as an argument.
+					extraData // extraData, developer payload
 				);
-			} catch(IabHelper.IabAsyncInProgressException exception) {
+			}
+			catch(IabHelper.IabAsyncInProgressException exception) {
 				onPurchaseFailedHandler.run(exception.toString());
+			}
+			catch(JSONException jsonException) {
+				onPurchaseFailedHandler.run(jsonException.toString());
 			}
 		@}
 
