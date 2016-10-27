@@ -24,7 +24,7 @@ namespace Fuse.Billing.Android
 		private const string ItemTypeSubs = "subs";
 
 		Java.Object _helper;
-		NothingPromise _setupPromise;
+		SetupPromise _setupPromise;
 
 		public BillingHelper(string publicKey)
 		{
@@ -99,7 +99,7 @@ namespace Fuse.Billing.Android
 		{
 			if (_setupPromise != null)
 				return _setupPromise;
-			_setupPromise = new NothingPromise();
+			_setupPromise = new SetupPromise();
 			Permissions.Request(BillingPermission.BILLING).Then(OnPermissionGranted, OnPermissionFailed);
 			return _setupPromise;
 		}
@@ -238,10 +238,21 @@ namespace Fuse.Billing.Android
 			return Promise<TResult>.Run(new SingleInvokeClosure<T1, TResult>(del, arg1).Invoke);
 		}
 
-		private class NothingPromise : CustomPromise<Nothing>
+		private class SetupPromise : CustomPromise<Nothing>
 		{
 			public void Resolve()
 			{
+				if (State != FutureState.Pending)
+				{
+					// When switching between apps the billing service gets disconnected and connected.
+					// As a workaround, to not resolve the promise twice, we'll just return when that
+					// occurs.
+					//
+					// TODO: Handle this correctly. Need to read a bit more about the app lifecycle for that.
+					debug_log "HACK: Ignored setup message to avoid resolving promise again";
+					return;
+				}
+
 				base.Resolve(default(Nothing));
 			}
 		}
