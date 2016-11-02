@@ -22,7 +22,7 @@ This sample can't be run as-is. You have to create your own
 application instance in the Developer Console and modify this
 sample to point to it. Here is what you must do:
 
-ON THE GOOGLE PLAY DEVELOPER CONSOLE
+### On the Google Play Developer Console
 
 1. Create an application on the Developer Console, available at
    https://play.google.com/apps/publish/.
@@ -30,7 +30,7 @@ ON THE GOOGLE PLAY DEVELOPER CONSOLE
 2. Copy the application's public key (a base-64 string). You can find this in
    the "Services & APIs" section under "Licensing & In-App Billing".
 
-IN THE CODE
+### In the code
 
 3. Open main.js, find the declaration of base64EncodedPublicKey and
    replace the placeholder value with the public key you retrieved in Step 2.
@@ -40,7 +40,7 @@ IN THE CODE
 
 5. Export an APK, signing it with your PRODUCTION (not debug) developer certificate.
 
-BACK TO THE GOOGLE PLAY DEVELOPER CONSOLE
+### Back to the Google Play Developer Console
 
 6. Upload your APK to Google Play for Alpha Testing.
 
@@ -55,7 +55,7 @@ BACK TO THE GOOGLE PLAY DEVELOPER CONSOLE
 9. Under In-app Products, create SUBSCRIPTION items with these IDs:
        infinite_gas_monthly, infinite_gas_yearly
    Set their prices to 1 dollar and the billing recurrence to monthly for
-   infinite_gas_monthly and yearly for infinite_gas_yearly. To prevent being charged
+   `infinite_gas_monthly` and yearly for `infinite_gas_yearly`. To prevent being charged
    while testing, set the trial period to 7 days.
 
 10. Publish your APK to the Alpha channel. Wait 2-3 hours for Google Play to process the APK
@@ -64,10 +64,10 @@ BACK TO THE GOOGLE PLAY DEVELOPER CONSOLE
    similar. Ensure that the In-App products move to the "Active" state within the console before
    testing.
 
-TEST THE CODE
+### Test the code
 
 11. Install the APK signed with your PRODUCTION certificate, to a
-test device.[*]
+test device.
 12. Run the app.
 13. Make purchases using the test account you added in Step 7.
 
@@ -78,7 +78,7 @@ When using the tester functionality make sure to look for "Test" language append
 to each receipt. If you don't see "Test" then you will need to be sure to refund/cancel
 the charge.
 
-[*]: it will be easier to use a test device that doesn't have your
+It will be easier to use a test device that doesn't have your
 developer account logged in; this is because, if you attempt to purchase
 an in-app item using the same account that you used to publish the app,
 the purchase will not go through.
