@@ -1,28 +1,99 @@
-﻿## Library
+﻿## Introduction
 
-The library is contained in `src/Fuse.Billing.Android`. For documentation see `BillingModule.uno`.
+The `Fuse.Billing.Android` library makes it possible to receive payments through Google Play.
+
+The library is partially based on source code from the [TrivialDrive](https://github.com/googlesamples/android-play-billing/tree/master/TrivialDrive)
+example from Google.
+
+## Usage
+
+Before writing any code it's a good idea to get familiar with the features and limitations of the In-app billing API by
+skimming through the [official documentation for In-app billing](https://developer.android.com/google/play/billing/index.html).
+on Android.
+
+### Adding package reference
+
+To use this package we have to start by cloning the
+[fusetools/Fuse.Billing.Android](https://github.com/fusetools/Fuse.Billing.Android)
+repository. And then inside the `Projects` section of _your_ `.unoproj` file add a reference to
+`src/Fuse.Billing.Android/Fuse.Billing.Android.unoproj`.
+
+```
+  "Projects": ["../../Fuse.Billing.Android/src/Fuse.Billing.Android/Fuse.Billing.Android.unoproj"]
+```
+
+### Initialization
+
+Now we need to require the `FuseJS/Billing/Android` module.
+
+However, before using the API we'll have to call the `setup` function of the module, which will return a promise that
+will be resolved when the API is ready for use.
+
+```
+var InAppBilling = require("FuseJS/Billing/Android");
+
+InAppBilling.setup("insert your app's public key here")
+  .then(function() {
+    console.log("Setup completed");
+  })
+  .catch(function(error) {
+    console.log("Setup failed");
+  });
+```
+
+The `setup` function takes the public key for your application, found in the Google Play Developer Console.
+
+### API summary
+
+One-time item purchases:
+
+- `purchase` - Start purchase of item
+- `queryProductPurchases` - Query currently purchased items for the active Google Play user
+- `queryProductDetails` - Query details for products, given a list of skus
+- `consume` - Consume a purchased item
+
+Subscription items:
+
+- `querySubscriptionPurchases` - Query currently active subscription for Google play user
+- `subscribe` - Start purchase of new subscription
+
+The API is asynchronous, and all of the functions returns a [promise](https://www.promisejs.org/).
+
+For now complete [reference documentation](src/Fuse.Billing.Android/BillingModule.uno) for the API can found in the comments of [BillingModule.uno](src/Fuse.Billing.Android/BillingModule.uno).
+Proper generated documentation will become available at some later point.
+
+## Testing
+
+It is possible to test one-time purchases _before_ publishing your app, by making use of certain special SKU codes that
+returns static predefined responses.
+
+However, for testing subscription purchases publishing is mandatory.
+
+For more information on how to do testing see [Testing In-app Billing](https://developer.android.com/google/play/billing/billing_testing.html)
+from the official documentation.
 
 ## Example app
 
-This is an example of using the in app billing functionality on Android using a Fuse app.
-It's located in `src/Fuse.Billing.Android.Example`.
+There is a test application available in [src/Fuse.Billing.Android.Example](src/Fuse.Billing.Android.Example).
 
-The app got two views:
+This app got two pages:
 
 * Subscriptions.ux: For testing subscriptions, requires publishing to Play
 * MockedTests.ux: Single app purchases using static responses
   - Info about static responses can be found [here](https://developer.android.com/google/play/billing/billing_testing.html)
 
-## Setup guide
+You can alternate between the pages by dragging sideways. Note that zero effort has been used on esthetiques here.
 
-NOTE: This setup guide has been adapted from the the corresponding [guide](https://github.com/googlesamples/android-play-billing/edit/master/TrivialDrive/README.md)
-for the Google provided InAppBilling example.
+### Example setup guide
 
 This sample can't be run as-is. You have to create your own
 application instance in the Developer Console and modify this
 sample to point to it. Here is what you must do:
 
-### On the Google Play Developer Console
+This setup guide is based on the corresponding [guide](https://github.com/googlesamples/android-play-billing/edit/master/TrivialDrive/README.md)
+for the originial "TrivialDrive" example from Google, and adapted for use with included example.
+
+#### On the Google Play Developer Console
 
 1. Create an application on the Developer Console, available at
    https://play.google.com/apps/publish/.
@@ -30,7 +101,7 @@ sample to point to it. Here is what you must do:
 2. Copy the application's public key (a base-64 string). You can find this in
    the "Services & APIs" section under "Licensing & In-App Billing".
 
-### In the code
+#### In the code
 
 3. Open main.js, find the declaration of base64EncodedPublicKey and
    replace the placeholder value with the public key you retrieved in Step 2.
@@ -40,7 +111,7 @@ sample to point to it. Here is what you must do:
 
 5. Export an APK, signing it with your PRODUCTION (not debug) developer certificate.
 
-### Back to the Google Play Developer Console
+#### Back to the Google Play Developer Console
 
 6. Upload your APK to Google Play for Alpha Testing.
 
@@ -64,7 +135,7 @@ sample to point to it. Here is what you must do:
    similar. Ensure that the In-App products move to the "Active" state within the console before
    testing.
 
-### Test the code
+#### Test the code
 
 11. Install the APK signed with your PRODUCTION certificate, to a
 test device.
@@ -82,3 +153,15 @@ It will be easier to use a test device that doesn't have your
 developer account logged in; this is because, if you attempt to purchase
 an in-app item using the same account that you used to publish the app,
 the purchase will not go through.
+
+## License
+-------
+Copyright 2016 Fusetools AS
+
+Licensed under the [Apache License,version 2.0](LICENSE).
+
+This software contains modified code from the TrivialDrive example by Google, which is also licensed under the Apache License 2.0. The original source code can be obtained at:
+
+https://github.com/googlesamples/android-play-billing/tree/master/TrivialDrive
+
+

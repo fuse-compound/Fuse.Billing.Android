@@ -1,0 +1,9 @@
+Fuse.Billing.Android
+Copyright 2016 Fusetools AS
+
+This software contains modified code from the TrivialDrive example by Google,
+which is also licensed under the Apache License 2.0. The original source code
+can be obtained at:
+
+https://github.com/googlesamples/android-play-billing/tree/master/TrivialDrive
+
